@@ -101,20 +101,25 @@ class Reservoir:
                                      self.sigma, (self.N, self.M + 1))
         # TODO: the values of non-zero elements are randomly drawn from uniform dist [-1, 1]
         g = nx.erdos_renyi_graph(self.N, self.D / self.N, 42, True)
+#         一个由N个节点 D/N概率 组成的随机图
         # nx.draw(g, node_size=self.N)
         self.A = nx.adjacency_matrix(g).todense()
+#         ajacent matrix
         # spectral radius: rho
         self.rho = max(abs(np.linalg.eig(self.A)[0]))
         self.A *= 1.25 / self.rho
         # run the reservoir with the data and collect r
         for t in range(self.train_len):
             u = np.vstack((x[t] for x in self.dataset))
+#                            (M,1)
             # r(t + \Delta t) = (1 - alpha)r(t) + alpha * tanh(A * r(t) + Win * u(t) + bias)
             self.r = (1 - self.alpha) * self.r + self.alpha * np.tanh(np.dot(self.A,
                                                                              self.r) + np.dot(self.Win, np.vstack((self.bias, u))))
+#         只更新self.r
             if t >= self.init_len:
                 self.R[:, [t - self.init_len]
                        ] = np.vstack((self.bias, u, self.r))[:, 0]
+#         结果存在self.R中
         # train the output
         R_T = self.R.T  # Transpose
         # Wout = (s * r^T) * ((r * r^T) + beta * I)
